@@ -1,23 +1,28 @@
+""" Loto App """
+## librerias para generar aleatorios y trabajar con json
 import json
 import random
 
-clients_db = {}
-winner_ticket = []
-ticket = []
+clients_db = {} # Dict que almacena clientes con la clave $RFC como un dict y dentro nombres, apellidos como strings y ticker a una lista 
+winner_ticket = []  # Combinacion ganadora
+ticket = [] # Combinacion (temporal) para comparar con winner_ticket
 
 
-def update_db():
-    jsonfile = open("data_base.json","w")
-    json_temp = json.dumps(clients_db)
-    jsonfile.write(json_temp)
-    jsonfile.close()
+def update_db(): # funcion que actualiza y agrega datos al diccionario 
 
-def showMenu():
+    # los siguientes son en relacion a la salida de dict --> json
+    jsonfile = open("data_base.json","w") # json en modo de escritura
+    json_temp = json.dumps(clients_db) # json.dumps proporciona una estructura json como strings y se almacena en una variable temporal
+    jsonfile.write(json_temp) # enviamos a json_temp fuera en el archivo
+    jsonfile.close() # importante cerrar el archivo
+
+def showMenu(): # Muestra las opciones displonibles
     menu = ["Capturar cliente","Registrar combinancion","Generar combinacion aleatoria","Generar boleto","Generar sorteo","Validar boleto","Salir"]
     for option in range(len(menu)):
             print(f"({option+1}) {menu[option]}")
 
-def addClient():
+def addClient(): # Funcion que añade clientes al dict clients_db
+
     print("Capturarando cliente".center(100,"_"))
     id_rfc = input("RFC del cliente:\t")
     names = input("Nombre(s) del cliente:\t")
@@ -26,56 +31,64 @@ def addClient():
     clients_db[id_rfc] = {}
     clients_db[id_rfc]["c_name"] = names
     clients_db[id_rfc]["c_lname"] = lnames
-    update_db()
+    update_db() # llamando a la funcion para redireccionar al json
 
 
-def combRegister():
+def combRegister(): # registra combinaciones a eleccion del usuario
+
     print("Registrando combinacion".center(100,"_"))
+    # ejecutar siempre como verdadero
     while True:
-        size_comb = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t"))
+        size_comb = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t")) # determina el numero de combinaciones
         comb = input("Inserte sus numeros separados por comas:\t")
-        comb_list = comb.split(',')
+        comb_list = comb.split(',') # combierte el string a lista a partir de las comas
 
-        count_limit = 0
+        count_limit = 0  # contador que recibe 1 si hay numeros mayores al 59, puede usarse False y True en lugar de un sumador
 
-        for number in range(size_comb):
+        for number in range(size_comb): # revisar 1 por 1 si hay numeros mayores a 59
             if int(comb_list[number]) > 59:
-                count_limit += 1
+                count_limit += 1 # añadir 1 al contador si los hay
 
-        if count_limit == 0:
-            ticket = comb_list
+        if count_limit == 0: # si no hay ninguno se mantiene en 0 y la lista de combinaciones se envia a ticket
+            ticket = comb_list # ticket igual a la combinacion insertada
             print(str(ticket))
-            id_rfc = input("RFC del cliente del boleto:\t")
+            id_rfc = input("RFC del cliente del boleto:\t") # insertar el rfc para añadir el ticket al usuario deseado
             clients_db[id_rfc]['ticket'] = ticket
-            update_db()
-            break
+            update_db() # actualizar db
+            break # romper el ciclo para terminar
         else:
             print("Su combinacion tiene numeros mayores a 59")
-            continue
+            continue # continuar si count_limit es mayor a 0
 
-def combRandom():
+def combRandom(): # generador de combinaciones aleatorias
     print("Generando combinacion aleatoria".center(100,"_"))
-    numbers = "0123456789"
-    size = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t"))
+    numbers = "0123456789" # numeros que puede tomar nuestro generador
+    size = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t")) # numeros de combinaciones
 
-    count_limit = 0
-    while True:
-        temp = "".join(random.sample(numbers,2))
-        if int(temp) < 59:
+    count_limit = 0 # 
+
+    while True: # se ejecuta siempre
+        temp = "".join(random.sample(numbers,2)) # generar un numero de 2 digitos 
+        if int(temp) < 59: # si es menor a 59 añadirlo al ticket
             ticket.append(int(temp))
-            count_limit += 1
+            count_limit += 1 # sumar 1 a count_limit para indicar que un espacio del tamaño total de numeros se ha llenado
             if count_limit == size:
+                """
+                si Count limit llega al mismo valor de numero de combinaciones
+                entonces eso indica que se han encontrado n numeros menores a 59 y han sido añadidos al ticket
+                """
                 print(str(ticket))
-                id_rfc = input("RFC del cliente del boleto:\t")
+                id_rfc = input("RFC del cliente del boleto:\t") # enviar el ticket al rfc del cliente
                 clients_db[id_rfc]['ticket'] = ticket
                 update_db()
                 break
             else:
+                # si no aun seguir ejecutando 
                 continue
-        else:
+        else: # continuar con el while aun, se entiende que algunos numeros si son mayores a 59 no se cumple el if entonces sigue buscando hasta encontrar
             continue
 
-def priceChecker(size_ticket):
+def priceChecker(size_ticket): # determina el precio con el n numero de combinaciones
     match size_ticket:
         case 6:
             return 15
@@ -88,14 +101,18 @@ def priceChecker(size_ticket):
         case 10:
             return 3150
 
-def genTicket():
+def genTicket(): # generar un boleto y lo manda a un archivo externo
+
     print("Generando boleto".center(100,"_"))
     print("se usaran los siguientes datos...".center(100))
+    # Se indica el rfc para obtener los datos a imprimir
     id_rfc = input("RFC del cliente:\t")
+
+    # se abre el archivo json en modo lectura para extraer la informacion del objeto
     f = open('data_base.json','r')
     a = f.read()
-    db = json.loads(a)
-    size = len(db[id_rfc]['ticket'])
+    db = json.loads(a) # loads carga lo que f.read esta leyendo del json
+    size = len(db[id_rfc]['ticket']) # determina el tamaño del billete para imprimir el precio
 
 
     print(f"RFC:\t{id_rfc}")
@@ -140,19 +157,25 @@ def genTicket():
     f.close()
     crear.close() #Se cierra el archivo creado
 
-def genLoto():
+def genLoto(): # generar sorteo
     print("Generando sorteo".center(100,"_"))
 
-    numbers = "0123456789"
-    size = int(input("Introduzca el tamaño del boleto ganandor (min. 6 | max. 10):\t"))
+    """
+        Al igual que en el generador de boletos, genLoto, genera una combinacion
+        de n 10 numeros de 2 digitos, y revisa que no sean mayores al limite para 
+        agregarlos a la variable que almacena el boleto ganador
+    """
+    numbers = "0123456789" # numeros para crear combinaciones
+    size = int(input("Introduzca el tamaño del boleto ganandor (min. 6 | max. 10):\t")) # tamaño de combinaciones
 
-    count_limit = 0
+    count_limit = 0 # para igualar con size
     while True:
+        # generar combinaciones de 2 digitos de 1 en 1
         temp = "".join(random.sample(numbers,2))
-        if int(temp) < 59:
-            winner_ticket.append(int(temp))
-            count_limit += 1
+        if int(temp) < 59: # si es menor a 59 añadir a winner_ticket            winner_ticket.append(int(temp))
+            count_limit += 1 # sumar 1 al contador para indicar que un numero se ha añadido
             if count_limit == size:
+                # si han añadido la misma cantidad de numeros que indica size entonces romper el ciclo
                 break
             else:
                 continue
@@ -161,21 +184,25 @@ def genLoto():
     print(str(winner_ticket))
 
 def ticketChecker():
+
+    # Funcion que validad si el ticker es ganador, o sea, igual a winner_ticket
     print("Validando boleto".center(100,"_"))
-    size = int(input("Introduzca el tamaño del boleto ganandor (min. 6 | max. 10):\t"))
+    size = int(input("Introduzca el tamaño del boleto ganandor (min. 6 | max. 10):\t")) # no. de combinaciones
     ticket_temp = input("Inserte sus numeros separados por comas:\t")
     ticket_to_check = ticket_temp.split(',')
     
-    count_limit = 0
+    count_limit = 0 # contador de veces que se hayaron coicidencias
     for number in range(size):
         if ticket_to_check[number] == winner_ticket[number]:
             count_limit += 1
-    if count_limit == size:
+    if count_limit == size: # si todos los numeros de ticket y de winner ticket son iguales, el boleto es igual y es ganador
         print(f"{ticket_to_check} es ganador")
     else:
         print(f"{ticket_to_check} no es ganador")
 
 
+
+# Menu que llama a las funciones anteriormente declaradas
 print("SORTEOS APP".center(100,"="))
 while True:
 
@@ -199,6 +226,6 @@ while True:
             genLoto() # Loto 
         case 6:
             ticketChecker() # check winners
-        case 7:
+        case 7: # exit or kill session
             print("Goodbye".center(100,"~"))
             break
