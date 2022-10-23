@@ -1,3 +1,4 @@
+import menu
 print("SORTEOS DEL BIENESTAR".center(100,"="))
 while True:
 
@@ -6,7 +7,7 @@ while True:
     select_option = int(input("Seleccione una opcion:\t"))
     match select_option:
         case 1:
-            # clients register 
+            menu.showMenu()# clients register 
 
         case 2:
             # comb register
