@@ -2,6 +2,7 @@
 ## librerias para generar aleatorios y trabajar con json
 import json
 import random
+from textwrap import indent
 
 client = {} # Dict que almacena clientes con la clave $RFC como un dict y dentro nombres, apellidos como strings y ticker a una lista 
 winner_ticket = []  # Combinacion ganadora
@@ -13,7 +14,7 @@ def update_db(rfc): # funcion que actualiza y agrega datos al diccionario
 
     # los siguientes son en relacion a la salida de dict --> json
     jsonfile = open(f"client_data/{filename}.json","w") # json en modo de escritura
-    json_temp = json.dumps(client[rfc]) # json.dumps proporciona una estructura json como strings y se almacena en una variable temporal
+    json_temp = json.dumps(client[rfc], indent=4, sort_keys=True) # json.dumps proporciona una estructura json como strings y se almacena en una variable temporal
     jsonfile.write(json_temp) # enviamos a json_temp fuera en el archivo
     jsonfile.close() # importante cerrar el archivo
 
@@ -62,6 +63,7 @@ def combRegister(): # registra combinaciones a eleccion del usuario
             continue # continuar si count_limit es mayor a 0
 
 def combRandom(): # generador de combinaciones aleatorias
+    ticket = []
     print("Generando combinacion aleatoria".center(100,"_"))
     numbers = "0123456789" # numeros que puede tomar nuestro generador
     size = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t")) # numeros de combinaciones
@@ -81,7 +83,10 @@ def combRandom(): # generador de combinaciones aleatorias
                 print(str(ticket))
                 id_rfc = input("RFC del cliente del boleto:\t") # enviar el ticket al rfc del cliente
                 
-                client[id_rfc]['ticket'] = ticket
+                if  'ticket' in client[id_rfc]:
+                    client[id_rfc]['ticket'].append(ticket)
+                if 'ticket' not in client[id_rfc]:
+                    client[id_rfc]['ticket'] = [ticket]
                 update_db(id_rfc)
                 break
             else:
