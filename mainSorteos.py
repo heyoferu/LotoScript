@@ -2,7 +2,6 @@
 ## librerias para generar aleatorios y trabajar con json
 import json
 import random
-from textwrap import indent
 
 client = {} # Dict que almacena clientes con la clave $RFC como un dict y dentro nombres, apellidos como strings y ticker a una lista 
 winner_ticket = []  # Combinacion ganadora
@@ -41,7 +40,10 @@ def combRegister(): # registra combinaciones a eleccion del usuario
     print("Registrando combinacion".center(100,"_"))
     # ejecutar siempre como verdadero
     while True:
-        size_comb = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t")) # determina el numero de combinaciones
+
+        size_comb = 0
+        while size_comb < 6 or size_comb > 10:
+            size_comb = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t")) # determina el numero de combinaciones
         comb = input("Inserte sus numeros separados por comas:\t")
         comb_list = comb.split(',') # combierte el string a lista a partir de las comas
 
@@ -66,8 +68,10 @@ def combRandom(): # generador de combinaciones aleatorias
     ticket = []
     print("Generando combinacion aleatoria".center(100,"_"))
     numbers = "0123456789" # numeros que puede tomar nuestro generador
-    size = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t")) # numeros de combinaciones
-
+    size_comb = 0
+    while size_comb < 6 or size_comb > 10:
+        size_comb = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t"))
+    
     count_limit = 0 # 
 
     while True: # se ejecuta siempre
@@ -75,7 +79,7 @@ def combRandom(): # generador de combinaciones aleatorias
         if int(temp) < 59: # si es menor a 59 añadirlo al ticket
             ticket.append(int(temp))
             count_limit += 1 # sumar 1 a count_limit para indicar que un espacio del tamaño total de numeros se ha llenado
-            if count_limit == size:
+            if count_limit == size_comb:
                 """
                 si Count limit llega al mismo valor de numero de combinaciones
                 entonces eso indica que se han encontrado n numeros menores a 59 y han sido añadidos al ticket
@@ -119,8 +123,14 @@ def genTicket(): # generar un boleto y lo manda a un archivo externo
     f = open(f'client_data/{id_rfc}.json','r')
     a = f.read()
     db = json.loads(a) # loads carga lo que f.read esta leyendo del json
-    size = len(db['ticket']) # determina el tamaño del billete para imprimir el precio
-
+    if len(db['ticket']) > 1:
+        for i in range(len(db['ticket'])):
+            print(f"{i}) {db['ticket'][i]}")
+        select_ticket = int(input("Seleccione su boleto a imprimir:\t"))
+        ticket_to_impress = db['ticket'][select_ticket]
+        size = len(ticket_to_impress) # determina el tamaño del billete para imprimir el precio
+    else:
+        size = len(db['ticket'][ticket_to_impress]) 
 
     print(f"RFC:\t{id_rfc}")
     print(f"Nombre(s):\t{db['c_name']}")
@@ -130,7 +140,7 @@ def genTicket(): # generar un boleto y lo manda a un archivo externo
 
     print(f"\nSu boleto se guardo en el archivo {id_rfc}.txt para que pueda imprimirlo")
 
-    crear = open(f"client_ticket/{id_rfc}.txt", "w")#Se abre el archivo
+    crear = open(f"client_ticket/{id_rfc}_{select_ticket}.txt", "w")#Se abre el archivo
     crear.write("*------*".center(55," ")  + "\n")
     crear.write("SORTEO".center(55, " ") + "\n")
     crear.write("*------*".center(55," ")  + "\n")
@@ -155,7 +165,7 @@ def genTicket(): # generar un boleto y lo manda a un archivo externo
     crear.write("+---------+".center(55," ")  + "\n")
     crear.write("|No.Sorteo|".center(55, " ") + "\n")
     crear.write("+---------+".center(55," ")  + "\n")
-    crear.write(str(db["ticket"]).center(55, " ") + "\n")
+    crear.write(str(ticket_to_impress).center(55, " ") + "\n")
     crear.write("\n")
     crear.write("+-----+".center(55," ")  + "\n")
     crear.write("Precio".center(55, " ") + "\n")
