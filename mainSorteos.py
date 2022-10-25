@@ -3,16 +3,17 @@
 import json
 import random
 
-clients_db = {} # Dict que almacena clientes con la clave $RFC como un dict y dentro nombres, apellidos como strings y ticker a una lista 
+client = {} # Dict que almacena clientes con la clave $RFC como un dict y dentro nombres, apellidos como strings y ticker a una lista 
 winner_ticket = []  # Combinacion ganadora
 ticket = [] # Combinacion (temporal) para comparar con winner_ticket
 
 
-def update_db(): # funcion que actualiza y agrega datos al diccionario 
+def update_db(rfc): # funcion que actualiza y agrega datos al diccionario 
+    filename = rfc
 
     # los siguientes son en relacion a la salida de dict --> json
-    jsonfile = open("data_base.json","w") # json en modo de escritura
-    json_temp = json.dumps(clients_db) # json.dumps proporciona una estructura json como strings y se almacena en una variable temporal
+    jsonfile = open(f"client_data/{filename}.json","w") # json en modo de escritura
+    json_temp = json.dumps(client[rfc]) # json.dumps proporciona una estructura json como strings y se almacena en una variable temporal
     jsonfile.write(json_temp) # enviamos a json_temp fuera en el archivo
     jsonfile.close() # importante cerrar el archivo
 
@@ -21,17 +22,17 @@ def showMenu(): # Muestra las opciones displonibles
     for option in range(len(menu)):
             print(f"({option+1}) {menu[option]}")
 
-def addClient(): # Funcion que añade clientes al dict clients_db
+def addClient(): # Funcion que añade clientes al dict client
 
     print("Capturarando cliente".center(100,"_"))
     id_rfc = input("RFC del cliente:\t")
     names = input("Nombre(s) del cliente:\t")
     lnames = input("Apellido(s) del cliente:\t")
 
-    clients_db[id_rfc] = {}
-    clients_db[id_rfc]["c_name"] = names
-    clients_db[id_rfc]["c_lname"] = lnames
-    update_db() # llamando a la funcion para redireccionar al json
+    client[id_rfc] = {}
+    client[id_rfc]["c_name"] = names
+    client[id_rfc]["c_lname"] = lnames
+    update_db(id_rfc) # llamando a la funcion para redireccionar al json
 
 
 def combRegister(): # registra combinaciones a eleccion del usuario
@@ -53,8 +54,8 @@ def combRegister(): # registra combinaciones a eleccion del usuario
             ticket = comb_list # ticket igual a la combinacion insertada
             print(str(ticket))
             id_rfc = input("RFC del cliente del boleto:\t") # insertar el rfc para añadir el ticket al usuario deseado
-            clients_db[id_rfc]['ticket'] = ticket
-            update_db() # actualizar db
+            client[id_rfc]['ticket'] = ticket
+            update_db(id_rfc) # actualizar db
             break # romper el ciclo para terminar
         else:
             print("Su combinacion tiene numeros mayores a 59")
@@ -79,8 +80,9 @@ def combRandom(): # generador de combinaciones aleatorias
                 """
                 print(str(ticket))
                 id_rfc = input("RFC del cliente del boleto:\t") # enviar el ticket al rfc del cliente
-                clients_db[id_rfc]['ticket'] = ticket
-                update_db()
+                
+                client[id_rfc]['ticket'] = ticket
+                update_db(id_rfc)
                 break
             else:
                 # si no aun seguir ejecutando 
@@ -109,21 +111,21 @@ def genTicket(): # generar un boleto y lo manda a un archivo externo
     id_rfc = input("RFC del cliente:\t")
 
     # se abre el archivo json en modo lectura para extraer la informacion del objeto
-    f = open('data_base.json','r')
+    f = open(f'client_data/{id_rfc}.json','r')
     a = f.read()
     db = json.loads(a) # loads carga lo que f.read esta leyendo del json
-    size = len(db[id_rfc]['ticket']) # determina el tamaño del billete para imprimir el precio
+    size = len(db['ticket']) # determina el tamaño del billete para imprimir el precio
 
 
     print(f"RFC:\t{id_rfc}")
-    print(f"Nombre(s):\t{db[id_rfc]['c_name']}")
-    print(f"Apellido(s):\t{db[id_rfc]['c_lname']}")
+    print(f"Nombre(s):\t{db['c_name']}")
+    print(f"Apellido(s):\t{db['c_lname']}")
     print(f"No. de combinaciones:\t{size}")
     print(f"Precio del boleto:\t{priceChecker(size)}")
 
     print(f"\nSu boleto se guardo en el archivo {id_rfc}.txt para que pueda imprimirlo")
 
-    crear = open(f"{id_rfc}.txt", "w")#Se abre el archivo
+    crear = open(f"client_ticket/{id_rfc}.txt", "w")#Se abre el archivo
     crear.write("*------*".center(55," ")  + "\n")
     crear.write("SORTEO".center(55, " ") + "\n")
     crear.write("*------*".center(55," ")  + "\n")
@@ -138,7 +140,7 @@ def genTicket(): # generar un boleto y lo manda a un archivo externo
     crear.write("+------+".center(55," ")  + "\n")
     crear.write("|NOMBRE|".center(55, " ") + "\n")
     crear.write("+------+".center(55," ")  + "\n")
-    crear.write(str(db[id_rfc]['c_name']) + str(db[id_rfc]['c_lname']).center(55, " ") + "\n")
+    crear.write(str(db['c_name']) + str(db['c_lname']).center(55, " ") + "\n")
     crear.write("\n")
     crear.write("+--------------+".center(55," ")  + "\n")
     crear.write("|No.Combinacion|".center(55, " ") + "\n")
@@ -148,7 +150,7 @@ def genTicket(): # generar un boleto y lo manda a un archivo externo
     crear.write("+---------+".center(55," ")  + "\n")
     crear.write("|No.Sorteo|".center(55, " ") + "\n")
     crear.write("+---------+".center(55," ")  + "\n")
-    crear.write(str(db[id_rfc]["ticket"]).center(55, " ") + "\n")
+    crear.write(str(db["ticket"]).center(55, " ") + "\n")
     crear.write("\n")
     crear.write("+-----+".center(55," ")  + "\n")
     crear.write("Precio".center(55, " ") + "\n")
