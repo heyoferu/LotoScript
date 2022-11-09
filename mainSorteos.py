@@ -38,29 +38,39 @@ def addClient(): # Funcion que añade clientes al dict client
 def combRegister(): # registra combinaciones a eleccion del usuario
 
     print("Registrando combinacion".center(100,"_"))
+    
+    id_rfc = input("RFC del cliente del boleto:\t") # enviar el ticket al rfc del cliente
+
+    f = open(f"client_data/{id_rfc}.json", "r")
+    
+    read_json = f.read()
+
+    client[id_rfc] = json.loads(read_json)
+
     # ejecutar siempre como verdadero
     while True:
 
         size_comb = 0
         while size_comb < 6 or size_comb > 10:
             size_comb = int(input("Introduzca el tamaño de sus combinacion (min. 6 | max. 10):\t")) # determina el numero de combinaciones
+        
         comb = input("Inserte sus numeros separados por comas:\t")
         comb_list = comb.split(',') # combierte el string a lista a partir de las comas
 
         count_limit = 0  # contador que recibe 1 si hay numeros mayores al 59, puede usarse False y True en lugar de un sumador
 
+
         for number in range(size_comb): # revisar 1 por 1 si hay numeros mayores a 59
-            if int(comb_list[number]) > 59:
+            if int(comb_list[number]) > 59 or comb_list.count(comb_list[number]) > 1:
                 count_limit += 1 # añadir 1 al contador si los hay
+                print(count_limit)
 
         if count_limit == 0: # si no hay ninguno se mantiene en 0 y la lista de combinaciones se envia a ticket
             ticket = [] # ticket igual a la combinacion insertada
             for i in range(len(comb_list)):
                 ticket.append(int(comb_list[i]))
             print(str(ticket))
-            
-            id_rfc = input("RFC del cliente del boleto:\t") # insertar el rfc para añadir el ticket al usuario deseado
-            
+                        
             # client[id_rfc]['ticket'] = ticket
             # update_db(id_rfc) # actualizar 
             
@@ -74,12 +84,22 @@ def combRegister(): # registra combinaciones a eleccion del usuario
 
             break # romper el ciclo para terminar
         else:
-            print("Su combinacion tiene numeros mayores a 59")
+            print("Su combinacion tiene numeros mayores a 59 o numeros repetidos")
             continue # continuar si count_limit es mayor a 0
 
 def combRandom(): # generador de combinaciones aleatorias
     ticket = []
+    
     print("Generando combinacion aleatoria".center(100,"_"))
+
+    id_rfc = input("RFC del cliente del boleto:\t") # enviar el ticket al rfc del cliente
+
+    f = open(f"client_data/{id_rfc}.json", "r")
+    
+    read_json = f.read()
+
+    client[id_rfc] = json.loads(read_json)
+
     numbers = "0123456789" # numeros que puede tomar nuestro generador
     size_comb = 0
     while size_comb < 6 or size_comb > 10:
@@ -90,22 +110,23 @@ def combRandom(): # generador de combinaciones aleatorias
     while True: # se ejecuta siempre
         temp = "".join(random.sample(numbers,2)) # generar un numero de 2 digitos 
         if int(temp) <= 59: # si es menor a 59 añadirlo al ticket
-            ticket.append(int(temp))
-            count_limit += 1 # sumar 1 a count_limit para indicar que un espacio del tamaño total de numeros se ha llenado
-            if count_limit == size_comb:
-                """
-                si Count limit llega al mismo valor de numero de combinaciones
-                entonces eso indica que se han encontrado n numeros menores a 59 y han sido añadidos al ticket
-                """
-                print(str(ticket))
-                id_rfc = input("RFC del cliente del boleto:\t") # enviar el ticket al rfc del cliente
-                if  'ticket' in client[id_rfc]:
-                    client[id_rfc]['ticket'].append(ticket)                
-                if 'ticket' not in client[id_rfc]:
-                    client[id_rfc]['ticket'] = [ticket]
+            if ticket.count(temp) < 1:
+                ticket.append(int(temp))
+                count_limit += 1 # sumar 1 a count_limit para indicar que un espacio del tamaño total de numeros se ha llenado
+                
+                if count_limit == size_comb:
+                    """
+                    si Count limit llega al mismo valor de numero de combinaciones
+                    entonces eso indica que se han encontrado n numeros menores a 59 y han sido añadidos al ticket
+                    """
+                    print(str(ticket))
+                    if  'ticket' in client[id_rfc]:
+                        client[id_rfc]['ticket'].append(ticket)                
+                    if 'ticket' not in client[id_rfc]:
+                        client[id_rfc]['ticket'] = [ticket]
 
-                update_db(id_rfc)
-                break
+                    update_db(id_rfc)
+                    break
             else:
                 # si no aun seguir ejecutando 
                 continue
